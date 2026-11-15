@@ -16,6 +16,9 @@ semver while wikisync is 0.x. Full notes for each release are on the
   fails with a module-path mismatch. Release downloads and git URLs redirect,
   the documentation is now at <https://heibench.com/wikisync/>, and
   the `User-Agent` sent to wikis names the new repository URL.
+- wikisync is now licensed under the Apache License 2.0, the licence the other
+  heibench tools use, in place of MIT. Releases up to 0.5.1 remain available
+  under MIT.
 
 ## [0.5.1] - 2026-11-13
 
