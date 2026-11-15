@@ -7,6 +7,8 @@ semver while wikisync is 0.x. Full notes for each release are on the
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-15
+
 ### Changed
 
 - **Breaking for `go install`.** wikisync moved to the heibench organization,
@@ -152,7 +154,8 @@ semver while wikisync is 0.x. Full notes for each release are on the
   default; `--apply` to publish, experimental in this release), with baseline
   snapshots for offline diffs and revision checks before every push.
 
-[Unreleased]: https://github.com/heibench/wikisync/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/heibench/wikisync/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/heibench/wikisync/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/heibench/wikisync/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/heibench/wikisync/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/heibench/wikisync/compare/v0.3.1...v0.4.0
