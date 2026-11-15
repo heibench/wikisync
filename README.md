@@ -4,16 +4,16 @@ Pull pages from any MediaWiki wiki into local `.wiki` files, edit them with the
 tools you already use (an editor, `grep`, scripts, an LLM, offline), review the
 diff, then push the changes back under your own account. Like git, for a wiki.
 
-**Documentation: <https://cameronbrooks11.github.io/wikisync/>**
+**Documentation: <https://heibench.com/wikisync/>**
 
 ## Install
 
 Download a binary for Linux, macOS or Windows from the
-[releases](https://github.com/CameronBrooks11/wikisync/releases), or build with
+[releases](https://github.com/heibench/wikisync/releases), or build with
 Go 1.23+:
 
 ```sh
-go install github.com/CameronBrooks11/wikisync@latest
+go install github.com/heibench/wikisync@latest
 ```
 
 ## Quick start

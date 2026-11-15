@@ -11,9 +11,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/CameronBrooks11/wikisync/internal/core"
-	"github.com/CameronBrooks11/wikisync/internal/creds"
-	"github.com/CameronBrooks11/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/core"
+	"github.com/heibench/wikisync/internal/creds"
+	"github.com/heibench/wikisync/internal/mw"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 )
 
 func userAgent() string {
-	return "wikisync/" + version + " (+https://github.com/CameronBrooks11/wikisync)"
+	return "wikisync/" + version + " (+https://github.com/heibench/wikisync)"
 }
 
 func main() {

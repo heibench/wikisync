@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/CameronBrooks11/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/mw"
 )
 
 func TestStatusUnchangedAfterPull(t *testing.T) {

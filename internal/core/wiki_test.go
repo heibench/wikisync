@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // tree writes a manifest tracking one page per host/path pair.

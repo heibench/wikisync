@@ -26,7 +26,7 @@ import (
 )
 
 func TestLiveWatchlist(t *testing.T) {
-	const ua = "wikisync-integration-test (+https://github.com/CameronBrooks11/wikisync)"
+	const ua = "wikisync-integration-test (+https://github.com/heibench/wikisync)"
 	apiURL, page := os.Getenv("WIKISYNC_TEST_API_URL"), os.Getenv("WIKISYNC_TEST_PAGE")
 	user, pass := os.Getenv("WIKISYNC_USERNAME"), os.Getenv("WIKISYNC_PASSWORD")
 	noUser, noPass := os.Getenv("WIKISYNC_TEST_NOGRANT_USERNAME"), os.Getenv("WIKISYNC_TEST_NOGRANT_PASSWORD")

@@ -4,7 +4,7 @@
 
 Please don't open a public issue. Report it privately through GitHub:
 **Security → Report a vulnerability** on this repository
-(<https://github.com/CameronBrooks11/wikisync/security/advisories/new>).
+(<https://github.com/heibench/wikisync/security/advisories/new>).
 
 Include what you found, how to reproduce it, and what an attacker could do with
 it. wikisync handles bot-password credentials and writes files named after

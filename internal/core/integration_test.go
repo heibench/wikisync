@@ -31,9 +31,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/CameronBrooks11/wikisync/internal/creds"
-	"github.com/CameronBrooks11/wikisync/internal/mw"
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/creds"
+	"github.com/heibench/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 func envOr(key, fallback string) string {
@@ -45,7 +45,7 @@ func envOr(key, fallback string) string {
 
 func TestLivePushRoundTrip(t *testing.T) {
 	stamp := time.Now().UnixNano()
-	const ua = "wikisync-integration-test (+https://github.com/CameronBrooks11/wikisync)"
+	const ua = "wikisync-integration-test (+https://github.com/heibench/wikisync)"
 
 	host := os.Getenv("WIKISYNC_TEST_HOST")
 	path := envOr("WIKISYNC_TEST_PATH", "/w/")

@@ -3,9 +3,18 @@
 All notable changes to wikisync. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 semver while wikisync is 0.x. Full notes for each release are on the
-[releases page](https://github.com/CameronBrooks11/wikisync/releases).
+[releases page](https://github.com/heibench/wikisync/releases).
 
 ## [Unreleased]
+
+### Changed
+
+- **Breaking for `go install`.** wikisync moved to the heibench organization,
+  so the module path is now `github.com/heibench/wikisync`. Install with
+  `go install github.com/heibench/wikisync@latest`; the old path stays on
+  0.5.1, the last release published under it. Release downloads and git URLs
+  redirect, the documentation is now at <https://heibench.com/wikisync/>, and
+  the `User-Agent` sent to wikis names the new repository URL.
 
 ## [0.5.1] - 2026-11-13
 
@@ -139,14 +148,14 @@ semver while wikisync is 0.x. Full notes for each release are on the
   default; `--apply` to publish, experimental in this release), with baseline
   snapshots for offline diffs and revision checks before every push.
 
-[Unreleased]: https://github.com/CameronBrooks11/wikisync/compare/v0.5.1...HEAD
-[0.5.1]: https://github.com/CameronBrooks11/wikisync/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/CameronBrooks11/wikisync/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/CameronBrooks11/wikisync/compare/v0.3.1...v0.4.0
-[0.3.1]: https://github.com/CameronBrooks11/wikisync/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/CameronBrooks11/wikisync/compare/v0.2.1...v0.3.0
-[0.2.1]: https://github.com/CameronBrooks11/wikisync/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/CameronBrooks11/wikisync/compare/v0.1.2...v0.2.0
-[0.1.2]: https://github.com/CameronBrooks11/wikisync/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/CameronBrooks11/wikisync/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/CameronBrooks11/wikisync/releases/tag/v0.1.0
+[Unreleased]: https://github.com/heibench/wikisync/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/heibench/wikisync/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/heibench/wikisync/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/heibench/wikisync/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/heibench/wikisync/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/heibench/wikisync/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/heibench/wikisync/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/heibench/wikisync/compare/v0.1.2...v0.2.0
+[0.1.2]: https://github.com/heibench/wikisync/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/heibench/wikisync/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/heibench/wikisync/releases/tag/v0.1.0

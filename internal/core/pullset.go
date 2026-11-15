@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/CameronBrooks11/wikisync/internal/mw"
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // Selection is what a pull covers. Titles named explicitly are always pulled.
