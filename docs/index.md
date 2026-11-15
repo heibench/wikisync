@@ -28,5 +28,5 @@ since you pulled it, never deletes or creates pages, and logs in with a scoped
 - [Development](development.md): build, test and release wikisync itself.
 
 Source, releases and issues are on
-[GitHub](https://github.com/heibench/wikisync). wikisync is MIT
+[GitHub](https://github.com/heibench/wikisync). wikisync is Apache-2.0
 licensed.

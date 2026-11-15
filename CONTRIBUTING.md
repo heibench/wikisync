@@ -41,4 +41,4 @@ Security problems go through [SECURITY.md](SECURITY.md), not public issues.
 
 ## License
 
-Contributions are licensed under the project's [MIT license](LICENSE).
+Contributions are licensed under the project's [Apache License 2.0](LICENSE).
