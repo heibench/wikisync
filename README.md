@@ -53,4 +53,4 @@ still change between minor versions; see the [changelog](CHANGELOG.md).
 - [Development](docs/development.md): building, testing, releasing
 
 [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) ·
-MIT — see [LICENSE](LICENSE).
+Apache-2.0 — see [LICENSE](LICENSE).
