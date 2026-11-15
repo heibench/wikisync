@@ -3,14 +3,14 @@
 ## Install
 
 Download the archive for your platform from the
-[releases page](https://github.com/CameronBrooks11/wikisync/releases)
+[releases page](https://github.com/heibench/wikisync/releases)
 (Linux, macOS and Windows, amd64 and arm64), check it against `checksums.txt`,
 and put the `wikisync` binary on your `PATH`.
 
 Or build it with Go 1.23 or later:
 
 ```sh
-go install github.com/CameronBrooks11/wikisync@latest
+go install github.com/heibench/wikisync@latest
 ```
 
 Check it runs:

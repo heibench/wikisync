@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/CameronBrooks11/wikisync/internal/mw"
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 type fakeLister struct {

@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // ErrNoHost means a working tree has no pages yet and no --host was given.

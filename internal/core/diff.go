@@ -9,7 +9,7 @@ import (
 
 	"github.com/pmezard/go-difflib/difflib"
 
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // DiffState describes what a page's diff produced.

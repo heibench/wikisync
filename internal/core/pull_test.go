@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/CameronBrooks11/wikisync/internal/mw"
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // --- shared test helpers (package core) ---

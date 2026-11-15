@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/CameronBrooks11/wikisync/internal/mw"
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // silence redirects stdout/stderr to /dev/null for the duration of a test, so

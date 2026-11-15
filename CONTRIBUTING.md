@@ -5,7 +5,7 @@ Bug reports, fixes and improvements are welcome.
 ## Set up
 
 ```sh
-git clone https://github.com/CameronBrooks11/wikisync.git
+git clone https://github.com/heibench/wikisync.git
 cd wikisync
 just setup
 ```

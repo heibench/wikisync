@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/CameronBrooks11/wikisync/internal/mw"
-	"github.com/CameronBrooks11/wikisync/internal/store"
+	"github.com/heibench/wikisync/internal/mw"
+	"github.com/heibench/wikisync/internal/store"
 )
 
 // PagePath maps a page to its path in the working tree, relative to the root

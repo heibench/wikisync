@@ -1,4 +1,4 @@
-module github.com/CameronBrooks11/wikisync
+module github.com/heibench/wikisync
 
 go 1.23
 
