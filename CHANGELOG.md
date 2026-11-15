@@ -11,9 +11,10 @@ semver while wikisync is 0.x. Full notes for each release are on the
 
 - **Breaking for `go install`.** wikisync moved to the heibench organization,
   so the module path is now `github.com/heibench/wikisync`. Install with
-  `go install github.com/heibench/wikisync@latest`; the old path stays on
-  0.5.1, the last release published under it. Release downloads and git URLs
-  redirect, the documentation is now at <https://heibench.com/wikisync/>, and
+  `go install github.com/heibench/wikisync@latest`. The old path gets no
+  further releases: `go install` against it installs an older release or
+  fails with a module-path mismatch. Release downloads and git URLs redirect,
+  the documentation is now at <https://heibench.com/wikisync/>, and
   the `User-Agent` sent to wikis names the new repository URL.
 
 ## [0.5.1] - 2026-11-13
