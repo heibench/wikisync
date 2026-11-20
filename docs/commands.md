@@ -97,7 +97,9 @@ For each tracked page (or each page you name), `push`:
 never a delete.
 
 Output: `pushed "Title" (now rev N)`, `would push "Title"`, or a `conflict`,
-`error` or `skipped` line on stderr with the reason. If an edit lands but the
+`refused`, `error` or `skipped` line on stderr with the reason. `refused`
+is the wiki declining the edit; `error` is the wiki or the connection
+failing. If an edit lands but the
 text the wiki saved can't be read back, a `warning` line on stderr says so;
 the baseline then holds the text as sent.
 
@@ -105,9 +107,12 @@ the baseline then holds the text as sent.
 
 | Code | When |
 |---|---|
-| 0 | Success. For `pull`, at least one page was written; pages that don't exist on the wiki are reported but don't fail the run. |
-| 1 | Something needs attention: `pull` skipped a page with local changes or a clashing file name, wrote nothing, or exceeded `--max`; `pull --watchlist` couldn't log in or read the watchlist; `push` hit a conflict or error, or was given a title that isn't tracked; or the wiki or a file couldn't be read. |
-| 2 | Usage: an unknown command or flag; `pull` with nothing named and nothing tracked; a first `pull` without `--host`; `--depth` below 0 or without `--category`; a `--host` or `--path` different from the working tree's wiki; `pull --watchlist` without credentials; or `push --apply` without `--summary` or credentials. |
+| 0 | Success. For `pull`, at least one page was written; pages that don't exist on the wiki are reported but don't fail the run. For `push --apply`, an edit that landed but whose saved text couldn't be read back still counts, with its `warning` line. |
+| 1 | Refused: `pull` skipped a page with local changes or a clashing file name, wrote nothing, or exceeded `--max`; `push` hit a conflict, had a page with no baseline, was given a title that isn't tracked, or the wiki declined an edit (a `refused` line: a protected page, an abuse filter, an edit conflict, a missing right). |
+| 4 | Environment fault, not a verdict on the pages: the wiki couldn't be reached or answered with a server error, or was read-only; credentials are missing or the login failed; a local file or the working tree couldn't be read or written. `push` exits 4 when any page hit one (an `error` line), even if another page was refused, because the run didn't finish deciding. |
+| 64 | Usage: an unknown command or flag; `pull` with nothing named and nothing tracked; a first `pull` without `--host`; `--depth` below 0 or without `--category`; a `--host` or `--path` different from the working tree's wiki; or `push --apply` without `--summary`. |
+
+These are the heibench exit codes; 2, *could not tell*, is not used.
 
 ## Choosing the wiki
 

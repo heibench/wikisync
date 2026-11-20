@@ -124,7 +124,7 @@ func (c *Client) WatchlistPages() (pages []ListedPage, missing int, err error) {
 		"gwrlimit":  {"max"},
 	})
 	if err != nil {
-		var apiErr *apiError
+		var apiErr *APIError
 		if errors.As(err, &apiErr) && apiErr.Code == "permissiondenied" {
 			err = fmt.Errorf("%w (the bot password needs the \"View your watchlist\" grant)", err)
 		}

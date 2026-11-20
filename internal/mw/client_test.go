@@ -214,3 +214,44 @@ func TestRevisionText(t *testing.T) {
 		t.Fatalf("RevisionText = (%q, %v)", text, err)
 	}
 }
+
+// An edit the wiki declines is told apart from a wiki or a connection that
+// failed, through the real request path (#66).
+func TestRefusedTellsTheWikiDecliningFromTheWikiFailing(t *testing.T) {
+	cases := []struct {
+		name, body string
+		status     int
+		refused    bool
+	}{
+		{"protected page", `{"error":{"code":"protectedpage","info":"This page has been protected"}}`, 200, true},
+		{"edit conflict", `{"error":{"code":"editconflict","info":"Edit conflict"}}`, 200, true},
+		{"abuse filter result", `{"edit":{"result":"Failure"}}`, 200, true},
+		{"database error", `{"error":{"code":"internal_api_error_DBQueryError","info":"Database error"}}`, 200, false},
+		{"read-only wiki", `{"error":{"code":"readonly","info":"The wiki is in read-only mode"}}`, 200, false},
+		{"lost session", `{"error":{"code":"badtoken","info":"Invalid CSRF token"}}`, 200, false},
+		{"server error", `oops`, 503, false},
+		{"not json", `<html>`, 200, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				_ = r.ParseForm()
+				if r.Form.Get("meta") == "tokens" {
+					_, _ = io.WriteString(w, `{"query":{"tokens":{"csrftoken":"t"}}}`)
+					return
+				}
+				w.WriteHeader(tc.status)
+				_, _ = io.WriteString(w, tc.body)
+			}))
+			t.Cleanup(srv.Close)
+			c := &Client{HTTP: srv.Client(), APIURL: srv.URL, UserAgent: "ua"}
+			_, err := c.Edit("Page", "text", "s", 1)
+			if err == nil {
+				t.Fatal("Edit succeeded, want an error")
+			}
+			if got := Refused(err); got != tc.refused {
+				t.Errorf("Refused(%v) = %v, want %v", err, got, tc.refused)
+			}
+		})
+	}
+}

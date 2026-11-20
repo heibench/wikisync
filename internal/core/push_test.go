@@ -59,7 +59,7 @@ func (w *fakeWiki) Edit(_, text, _ string, baseRevID int64) (int64, error) {
 		w.save(w.text + "\nsomeone else's edit")
 	}
 	if baseRevID > 0 && baseRevID != w.rev {
-		return 0, errors.New("edit error editconflict: Edit conflict.")
+		return 0, &mw.APIError{Code: "editconflict", Info: "Edit conflict."}
 	}
 	stored := strings.TrimRight(text, " \t\n\r\x00\x0B")
 	if stored == w.text {
@@ -262,8 +262,8 @@ func TestPushServerSideConflictLeavesBaseline(t *testing.T) {
 	dir := setupPulled(t, wiki, "orig\nnew")
 	wiki.moveOnEdit = true
 
-	if r := mustPush(t, dir, wiki, true); r[0].Action != PushError {
-		t.Fatalf("action = %s, want error", r[0].Action)
+	if r := mustPush(t, dir, wiki, true); r[0].Action != PushRefused {
+		t.Fatalf("action = %s, want refused", r[0].Action)
 	}
 	if baseline, _, _ := store.ReadBaseline(dir, 1); baseline != "orig" {
 		t.Errorf("baseline moved despite a rejected edit: %q", baseline)
@@ -283,6 +283,20 @@ func TestPushEditErrorIsReported(t *testing.T) {
 	}
 	if baseline, _, _ := store.ReadBaseline(dir, 1); baseline != "orig" {
 		t.Errorf("baseline moved despite failed edit: %q", baseline)
+	}
+}
+
+// An edit the wiki declines is refused, not an error: the wiki answered (#66).
+func TestPushEditTheWikiDeclinesIsRefused(t *testing.T) {
+	wiki := newFakeWiki("orig", 5)
+	dir := setupPulled(t, wiki, "orig\nnew")
+	wiki.editErr = &mw.APIError{Code: "protectedpage", Info: "This page has been protected"}
+
+	if r := mustPush(t, dir, wiki, true); r[0].Action != PushRefused {
+		t.Fatalf("action = %s, want refused", r[0].Action)
+	}
+	if baseline, _, _ := store.ReadBaseline(dir, 1); baseline != "orig" {
+		t.Errorf("baseline moved despite a refused edit: %q", baseline)
 	}
 }
 
