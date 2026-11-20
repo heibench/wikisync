@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/heibench/wikisync/internal/mw"
 	"github.com/heibench/wikisync/internal/store"
 )
 
@@ -17,6 +18,7 @@ const (
 	PushUnchanged  PushAction = "unchanged"
 	PushConflict   PushAction = "conflict"
 	PushError      PushAction = "error"
+	PushRefused    PushAction = "refused" // the wiki declined the edit on its merits (mw.Refused)
 	PushNoBaseline PushAction = "baseline-unavailable"
 )
 
@@ -90,7 +92,7 @@ func Push(root string, titles []string, remote Remote, apply bool, summary strin
 
 		remoteRev, exists, err := remote.CurrentRevID(title)
 		if err != nil {
-			results = append(results, PushResult{Title: title, Action: PushError, Detail: err.Error()})
+			results = append(results, PushResult{Title: title, Action: remoteFailure(err), Detail: err.Error()})
 			continue
 		}
 		if !exists {
@@ -113,7 +115,7 @@ func Push(root string, titles []string, remote Remote, apply bool, summary strin
 
 		newRev, err := remote.Edit(title, local, summary, entry.RevID)
 		if err != nil {
-			results = append(results, PushResult{Title: title, Action: PushError, Detail: err.Error()})
+			results = append(results, PushResult{Title: title, Action: remoteFailure(err), Detail: err.Error()})
 			continue
 		}
 
@@ -162,4 +164,13 @@ func Push(root string, titles []string, remote Remote, apply bool, summary strin
 		}
 	}
 	return results, untracked, nil
+}
+
+// remoteFailure is the action for a wiki request that failed: refused when
+// the wiki declined it, error when the wiki or the connection failed.
+func remoteFailure(err error) PushAction {
+	if mw.Refused(err) {
+		return PushRefused
+	}
+	return PushError
 }

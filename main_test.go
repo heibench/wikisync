@@ -79,21 +79,21 @@ func TestRun(t *testing.T) {
 	}{
 		{"no args prints usage", []string{}, 0},
 		{"version", []string{"--version"}, 0},
-		{"unknown command", []string{"bogus"}, 2},
-		{"pull with nothing named or tracked", []string{"pull", "--dir", t.TempDir()}, 2},
-		{"first pull needs --host", []string{"pull", "--dir", t.TempDir(), "Page"}, 2},
-		{"pull refuses another wiki", []string{"pull", "--host", "other.example.org", "--dir", trackedTree(t), "Page"}, 2},
-		{"pull --depth below 0", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--category", "C", "--depth", "-1"}, 2},
-		{"pull --depth needs --category", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--depth", "1", "Page"}, 2},
+		{"unknown command", []string{"bogus"}, 64},
+		{"pull with nothing named or tracked", []string{"pull", "--dir", t.TempDir()}, 64},
+		{"first pull needs --host", []string{"pull", "--dir", t.TempDir(), "Page"}, 64},
+		{"pull refuses another wiki", []string{"pull", "--host", "other.example.org", "--dir", trackedTree(t), "Page"}, 64},
+		{"pull --depth below 0", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--category", "C", "--depth", "-1"}, 64},
+		{"pull --depth needs --category", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--depth", "1", "Page"}, 64},
 		{"pull --depth with --category", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--category", "C", "--depth", "1"}, 1}, // the fake wiki has no pages
-		{"pull --watchlist needs credentials", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--watchlist"}, 2},
-		{"first pull --watchlist needs --host", []string{"pull", "--dir", t.TempDir(), "--watchlist"}, 2},
+		{"pull --watchlist needs credentials", []string{"pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--watchlist"}, 4},
+		{"first pull --watchlist needs --host", []string{"pull", "--dir", t.TempDir(), "--watchlist"}, 64},
 		{"status on empty dir", []string{"status", "--dir", t.TempDir()}, 0},
 		{"diff on empty dir", []string{"diff", "--dir", t.TempDir()}, 0},
 		{"push preview, nothing to push", []string{"push", "--dir", t.TempDir()}, 0},
-		{"push apply needs summary", []string{"push", "--apply", "--dir", t.TempDir()}, 2},
-		{"push apply needs credentials", []string{"push", "--apply", "--summary", "s", "--dir", trackedTree(t)}, 2},
-		{"push refuses another wiki", []string{"push", "--host", "other.example.org", "--dir", trackedTree(t)}, 2},
+		{"push apply needs summary", []string{"push", "--apply", "--dir", t.TempDir()}, 64},
+		{"push apply needs credentials", []string{"push", "--apply", "--summary", "s", "--dir", trackedTree(t)}, 4},
+		{"push refuses another wiki", []string{"push", "--host", "other.example.org", "--dir", trackedTree(t)}, 64},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -239,8 +239,8 @@ func TestLoginNeedsCredentials(t *testing.T) {
 		{[]string{"push", "--dir", trackedTree(t), "--apply", "--summary", "s"},
 			"wikisync push --apply: set " + vars + " (a MediaWiki bot password)\n"},
 	} {
-		if code, _, stderr := capture(t, tc.args...); code != 2 || stderr != tc.want {
-			t.Errorf("%v: got %d %q, want 2 %q", tc.args[:1], code, stderr, tc.want)
+		if code, _, stderr := capture(t, tc.args...); code != 4 || stderr != tc.want {
+			t.Errorf("%v: got %d %q, want 4 %q", tc.args[:1], code, stderr, tc.want)
 		}
 	}
 }
@@ -272,8 +272,8 @@ func TestPullWatchlistLogsInFirst(t *testing.T) {
 	code, _, stderr := capture(t, "pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "--watchlist")
 	const want = "logging in as Me@wikisync (from WIKISYNC_USERNAME_EXAMPLE)\n" +
 		"wikisync pull: login failed: Failed (bad password)\n"
-	if code != 1 || stderr != want {
-		t.Errorf("got %d %q, want 1 %q", code, stderr, want)
+	if code != 4 || stderr != want {
+		t.Errorf("got %d %q, want 4 %q", code, stderr, want)
 	}
 	if fmt.Sprint(asked) != "[token login]" {
 		t.Errorf("requests = %v, want a login token, a login, and nothing after the failure", asked)
@@ -415,5 +415,124 @@ func TestPushWarnsWhenTheSavedTextIsUnreadable(t *testing.T) {
 		"mediawiki api error internal_api_error: Database error\n"
 	if code != 0 || stdout != wantOut || stderr != wantErr {
 		t.Errorf("got %d %q %q\nwant 0 %q %q", code, stdout, stderr, wantOut, wantErr)
+	}
+}
+
+// pushServer is a wiki whose login and conflict check succeed and whose edit
+// of each page answers with edits[title] (#66).
+func pushServer(t *testing.T, edits map[string]string) {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		switch f := r.Form; {
+		case f.Get("meta") == "tokens":
+			_, _ = io.WriteString(w, `{"query":{"tokens":{"logintoken":"t","csrftoken":"t"}}}`)
+		case f.Get("action") == "login":
+			_, _ = io.WriteString(w, `{"login":{"result":"Success"}}`)
+		case f.Get("action") == "edit":
+			body := edits[f.Get("title")]
+			if body == "" {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				return
+			}
+			_, _ = io.WriteString(w, body)
+		default:
+			_, _ = io.WriteString(w, `{"query":{"pages":[{"pageid":1,"title":"`+f.Get("titles")+`","revisions":[{"revid":1}]}]}}`)
+		}
+	}))
+	t.Cleanup(srv.Close)
+	orig := newClient
+	newClient = func(_, _, ua string) *mw.Client { return mw.NewClientForAPI(srv.URL+"/api.php", ua) }
+	t.Cleanup(func() { newClient = orig })
+	t.Setenv("WIKISYNC_USERNAME_EXAMPLE", "Me@wikisync")
+	t.Setenv("WIKISYNC_PASSWORD_EXAMPLE", "secret")
+}
+
+// changedTree tracks each title with a local edit waiting to be pushed.
+func changedTree(t *testing.T, titles ...string) string {
+	t.Helper()
+	dir := t.TempDir()
+	m := &store.Manifest{Version: store.CurrentVersion, Entries: map[string]store.Entry{}}
+	for i, title := range titles {
+		id := int64(i + 1)
+		if err := os.WriteFile(dir+"/"+title+".wiki", []byte("changed\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := store.WriteBaseline(dir, id, "orig\n"); err != nil {
+			t.Fatal(err)
+		}
+		m.Entries[title] = store.Entry{Title: title, File: title + ".wiki", Host: "wiki.example.org", Path: "/w/",
+			RevID: 1, PageID: id, SHA256: store.ContentHash("orig\n")}
+	}
+	if err := m.Save(dir); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
+// push exits 1 when the wiki declines an edit and 4 when the wiki fails, and
+// a failure outranks a refusal in the same run (#66).
+func TestPushExitTellsARefusalFromAFailure(t *testing.T) {
+	const protected = `{"error":{"code":"protectedpage","info":"This page has been protected"}}`
+	const dbError = `{"error":{"code":"internal_api_error_DBQueryError","info":"Database error"}}`
+	for _, tc := range []struct {
+		name  string
+		edits map[string]string
+		want  int
+		lines []string
+	}{
+		{"protected page", map[string]string{"A": protected}, 1, []string{`refused "A"`}},
+		{"database error", map[string]string{"A": dbError}, 4, []string{`error "A"`}},
+		{"server unavailable", map[string]string{}, 4, []string{`error "A"`}},
+		{"failure, then refusal", map[string]string{"B": protected}, 4, []string{`error "A"`, `refused "B"`}}, // A gets a 503
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pushServer(t, tc.edits)
+			titles := []string{"A"}
+			if tc.name == "failure, then refusal" {
+				titles = append(titles, "B")
+			}
+			code, _, stderr := capture(t, append([]string{"push", "--dir", changedTree(t, titles...), "--apply", "--summary", "s"}, titles...)...)
+			if code != tc.want {
+				t.Errorf("exit %d, want %d; stderr %q", code, tc.want, stderr)
+			}
+			for _, l := range tc.lines {
+				if !strings.Contains(stderr, "\n"+l+": ") {
+					t.Errorf("stderr %q has no %s line", stderr, l)
+				}
+			}
+		})
+	}
+}
+
+// A wiki that can't be reached is an environment fault, not a finding (#66).
+func TestPullFromAnUnreachableWikiIsAnEnvironmentFault(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	url := srv.URL
+	srv.Close() // nothing listens there now
+	orig := newClient
+	newClient = func(_, _, ua string) *mw.Client { return mw.NewClientForAPI(url+"/api.php", ua) }
+	t.Cleanup(func() { newClient = orig })
+	code, stdout, stderr := capture(t, "pull", "--host", "wiki.example.org", "--dir", t.TempDir(), "Page")
+	if code != 4 || stdout != "" || !strings.Contains(stderr, "wikisync pull: wiki.example.org: ") {
+		t.Errorf("got %d %q %q, want 4 and the error on stderr", code, stdout, stderr)
+	}
+}
+
+// A working tree whose manifest can't be read is an environment fault for
+// every command that reads it (#66).
+func TestUnreadableTreeIsAnEnvironmentFault(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(dir+"/.wikisync", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir+"/.wikisync/manifest.json", []byte("{not json"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, cmd := range []string{"status", "diff", "push", "pull"} {
+		silence(t)
+		if got := run([]string{cmd, "--dir", dir}); got != 4 {
+			t.Errorf("%s on a corrupt manifest: exit %d, want 4", cmd, got)
+		}
 	}
 }

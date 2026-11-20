@@ -7,6 +7,22 @@ semver while wikisync is 0.x. Full notes for each release are on the
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking for scripts: exit codes follow the heibench table.** (#66)
+  - Usage errors exit **64**, not 2: an unknown command or flag, nothing to
+    pull, a first pull without `--host`, a bad `--depth`, a different wiki
+    from the working tree's, `push --apply` without `--summary`.
+  - Environment faults exit **4**, not 1 or 2: a wiki that can't be reached,
+    answers with a server error or is read-only; missing credentials for
+    `pull --watchlist` or `push --apply` (was 2); a failed login (was 1); a
+    working tree or local file that can't be read or written (was 1).
+  - `push` tells the wiki declining an edit, now a `refused` line and exit
+    1, from the wiki or the connection failing, an `error` line and exit 4.
+    Both were `error` and 1. When one run has both, it exits 4.
+  - Unchanged at 1: conflicts, pages skipped for local edits or a name clash,
+    an untracked title, a pull that wrote nothing, and `--max` exceeded.
+
 ## [0.6.0] - 2026-11-15
 
 ### Changed

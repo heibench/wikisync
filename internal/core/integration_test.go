@@ -198,7 +198,7 @@ func TestLivePushRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(results) != 1 || results[0].Action == PushError || results[0].Action == PushConflict {
+	if len(results) != 1 || results[0].Action == PushError || results[0].Action == PushRefused || results[0].Action == PushConflict {
 		t.Errorf("whitespace-only push: results = %+v", results)
 	}
 	if after := assertSynced("after whitespace-only push"); after.RevID != live.RevID {

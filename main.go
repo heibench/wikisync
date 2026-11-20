@@ -21,6 +21,13 @@ const (
 	defaultPath = "/w/"
 )
 
+// Exit codes, from the heibench table (heibench/.github AGENTS.md 6.2).
+const (
+	exitRefused     = 1  // the wiki or wikisync declined a page: a conflict, a refused edit, a local edit in the way
+	exitEnvironment = 4  // the wiki, the network, the credentials or the working tree failed; not a verdict
+	exitUsage       = 64 // bad arguments (EX_USAGE)
+)
+
 func userAgent() string {
 	return "wikisync/" + version + " (+https://github.com/heibench/wikisync)"
 }
@@ -51,7 +58,7 @@ func run(args []string) int {
 		return cmdPush(args[1:])
 	default:
 		fmt.Fprintf(os.Stderr, "wikisync: unknown command %q (try 'wikisync --help')\n", args[0])
-		return 2
+		return exitUsage
 	}
 }
 
@@ -88,14 +95,15 @@ WIKISYNC_PASSWORD.
 // command connects to.
 var newClient = mw.NewClient
 
-// wikiErrExit is the exit code for a ResolveWiki error: 2 when the command was
-// given the wrong or no wiki, 1 when the working tree couldn't be read.
+// wikiErrExit is the exit code for a ResolveWiki error: usage when the command
+// was given the wrong or no wiki, environment when the working tree couldn't be
+// read.
 func wikiErrExit(err error) int {
 	var mismatch *core.WikiMismatchError
 	if errors.Is(err, core.ErrNoHost) || errors.Is(err, core.ErrNothingToPull) || errors.As(err, &mismatch) {
-		return 2
+		return exitUsage
 	}
-	return 1
+	return exitEnvironment
 }
 
 // reportUntracked names each title cmd was asked for that isn't tracked, and
@@ -108,18 +116,19 @@ func reportUntracked(cmd string, untracked []string) bool {
 }
 
 // login logs client in with host's bot password for `wikisync cmd flag`,
-// and returns the exit code when it can't: 2 with no credentials (want says
-// what kind of bot password to set), 1 when the wiki refuses them.
+// and returns the exit code when it can't: environment, both with no
+// credentials (want says what kind of bot password to set) and when the wiki
+// refuses them, since neither says anything about the request.
 func login(client *mw.Client, host, cmd, flag, want string) int {
 	c, ok := creds.Lookup(host, os.Getenv)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "wikisync %s %s: set %s %s\n", cmd, flag, creds.Hint(host), want)
-		return 2
+		return exitEnvironment
 	}
 	fmt.Fprintf(os.Stderr, "logging in as %s (from %s)\n", c.Username, c.Source)
 	if err := client.Login(c.Username, c.Password); err != nil {
 		fmt.Fprintf(os.Stderr, "wikisync %s: login failed: %v\n", cmd, err)
-		return 1
+		return exitEnvironment
 	}
 	return 0
 }
@@ -152,15 +161,15 @@ func cmdPull(args []string) int {
 	allLanguages := fs.Bool("all-languages", false, "with --category/--prefix/--watchlist, also pull pages in other languages (e.g. translations)")
 	maxPages := fs.Int("max", 500, "refuse a --category/--prefix/--watchlist selection larger than this")
 	if err := fs.Parse(args); err != nil {
-		return 2
+		return exitUsage
 	}
 	switch {
 	case *depth < 0:
 		fmt.Fprintln(os.Stderr, "wikisync pull: --depth must be 0 or more")
-		return 2
+		return exitUsage
 	case *depth > 0 && len(categories) == 0:
 		fmt.Fprintln(os.Stderr, "wikisync pull: --depth needs --category")
-		return 2
+		return exitUsage
 	}
 	wiki, err := core.ResolveWiki(*dir, *host, *path, defaultPath)
 	if err != nil {
@@ -172,7 +181,7 @@ func cmdPull(args []string) int {
 	}
 	if err := os.MkdirAll(*dir, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "wikisync pull: %v\n", err)
-		return 1
+		return exitEnvironment
 	}
 
 	sel := core.Selection{
@@ -196,13 +205,13 @@ func cmdPull(args []string) int {
 	switch {
 	case errors.Is(err, core.ErrNothingToPull):
 		fmt.Fprintf(os.Stderr, "wikisync pull: %v\n", err)
-		return 2
+		return exitUsage
 	case errors.As(err, &tooMany):
 		fmt.Fprintf(os.Stderr, "wikisync pull: %v\n", err)
-		return 1
+		return exitRefused
 	case err != nil:
 		fmt.Fprintf(os.Stderr, "wikisync pull: %s: %v\n", wiki.Host, err)
-		return 1
+		return exitEnvironment
 	}
 	return printPullReport(rep, *depth)
 }
@@ -239,7 +248,7 @@ func printPullReport(rep *core.SetReport, depth int) int {
 		fmt.Fprintln(os.Stderr, "no pages matched")
 	}
 	if len(rep.SkippedDirty) > 0 || len(rep.Collisions) > 0 || len(rep.Written) == 0 {
-		return 1
+		return exitRefused
 	}
 	return 0
 }
@@ -248,12 +257,12 @@ func cmdStatus(args []string) int {
 	fs := flag.NewFlagSet("status", flag.ContinueOnError)
 	dir := fs.String("dir", ".", "directory holding the pulled files")
 	if err := fs.Parse(args); err != nil {
-		return 2
+		return exitUsage
 	}
 	items, err := core.Status(*dir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "wikisync status: %v\n", err)
-		return 1
+		return exitEnvironment
 	}
 	if len(items) == 0 {
 		fmt.Println("nothing pulled yet; run 'wikisync pull <page>' first")
@@ -269,12 +278,12 @@ func cmdDiff(args []string) int {
 	fs := flag.NewFlagSet("diff", flag.ContinueOnError)
 	dir := fs.String("dir", ".", "directory holding the pulled files")
 	if err := fs.Parse(args); err != nil {
-		return 2
+		return exitUsage
 	}
 	results, untracked, err := core.Diff(*dir, fs.Args())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "wikisync diff: %v\n", err)
-		return 1
+		return exitEnvironment
 	}
 	reportUntracked("diff", untracked)
 
@@ -304,16 +313,16 @@ func cmdPush(args []string) int {
 	apply := fs.Bool("apply", false, "actually publish edits (default: preview only)")
 	summary := fs.String("summary", "", "edit summary (required with --apply)")
 	if err := fs.Parse(args); err != nil {
-		return 2
+		return exitUsage
 	}
 	if *apply && *summary == "" {
 		fmt.Fprintln(os.Stderr, "wikisync push --apply: --summary is required")
-		return 2
+		return exitUsage
 	}
 	wiki, err := core.ResolveWiki(*dir, *host, *path, defaultPath)
 	if errors.Is(err, core.ErrNoHost) { // nothing tracked, so nothing to push
 		if reportUntracked("push", fs.Args()) {
-			return 1
+			return exitRefused
 		}
 		fmt.Println("no local changes to push")
 		return 0
@@ -333,12 +342,19 @@ func cmdPush(args []string) int {
 	results, untracked, err := core.Push(*dir, fs.Args(), client, *apply, *summary)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "wikisync push: %v\n", err)
-		return 1
+		return exitEnvironment
 	}
 
+	// A page the wiki couldn't be asked about outranks a refusal: the run
+	// didn't finish deciding, so it can't report a verdict.
 	exit := 0
 	if reportUntracked("push", untracked) {
-		exit = 1
+		exit = exitRefused
+	}
+	refuse := func() {
+		if exit == 0 {
+			exit = exitRefused
+		}
 	}
 	actionable := false
 	for _, r := range results {
@@ -356,13 +372,16 @@ func cmdPush(args []string) int {
 			// quiet: nothing to do
 		case core.PushConflict:
 			fmt.Fprintf(os.Stderr, "conflict %q: %s\n", r.Title, r.Detail)
-			exit = 1
+			refuse()
+		case core.PushRefused:
+			fmt.Fprintf(os.Stderr, "refused %q: %s\n", r.Title, r.Detail)
+			refuse()
 		case core.PushError:
 			fmt.Fprintf(os.Stderr, "error %q: %s\n", r.Title, r.Detail)
-			exit = 1
+			exit = exitEnvironment
 		case core.PushNoBaseline:
 			fmt.Fprintf(os.Stderr, "skipped %q: %s\n", r.Title, r.Detail)
-			exit = 1
+			refuse()
 		}
 	}
 	if !actionable && exit == 0 {

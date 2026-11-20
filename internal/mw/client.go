@@ -58,13 +58,40 @@ func NewClientForAPI(apiURL, userAgent string) *Client {
 	}
 }
 
-// apiError is MediaWiki's error envelope: {"error":{"code":…,"info":…}}.
-type apiError struct {
+// APIError is MediaWiki's error envelope: {"error":{"code":…,"info":…}}.
+type APIError struct {
 	Code string `json:"code"`
 	Info string `json:"info"`
 }
 
-func (e *apiError) Error() string { return "mediawiki api error " + e.Code + ": " + e.Info }
+func (e *APIError) Error() string { return "mediawiki api error " + e.Code + ": " + e.Info }
+
+// ErrEditFailed is an edit the wiki answered with a result other than
+// Success, such as an extension holding it back.
+var ErrEditFailed = errors.New("edit not successful")
+
+// Refused reports whether err is the wiki declining this request on its
+// merits — a protected page, an abuse filter, an edit conflict, a missing
+// right — rather than the wiki or the connection failing. A server error, a
+// read-only or lagged wiki, a rate limit and a lost session are failures:
+// the same request could succeed later unchanged.
+func Refused(err error) bool {
+	if errors.Is(err, ErrEditFailed) {
+		return true
+	}
+	var e *APIError
+	if !errors.As(err, &e) {
+		return false
+	}
+	if strings.HasPrefix(e.Code, "internal_api_error") {
+		return false
+	}
+	switch e.Code {
+	case "readonly", "maxlag", "ratelimited", "badtoken", "assertuserfailed", "assertbotfailed":
+		return false
+	}
+	return true
+}
 
 // call sends one API request as a GET or POST and decodes the response into
 // out. A status other than 200 and MediaWiki's error envelope both come back
@@ -99,7 +126,7 @@ func (c *Client) call(method string, params url.Values, out any) error {
 		return err
 	}
 	var envelope struct {
-		Error *apiError `json:"error"`
+		Error *APIError `json:"error"`
 	}
 	if err := json.Unmarshal(body, &envelope); err != nil {
 		return err
@@ -242,7 +269,7 @@ func (c *Client) Edit(title, text, summary string, baseRevID int64) (int64, erro
 		return 0, err
 	}
 	if out.Edit.Result != "Success" {
-		return 0, fmt.Errorf("edit not successful: %s", out.Edit.Result)
+		return 0, fmt.Errorf("%w: %s", ErrEditFailed, out.Edit.Result)
 	}
 	if out.Edit.NoChange {
 		return 0, nil
