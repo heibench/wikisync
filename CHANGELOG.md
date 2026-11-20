@@ -7,6 +7,8 @@ semver while wikisync is 0.x. Full notes for each release are on the
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-19
+
 ### Changed
 
 - **Breaking for scripts: exit codes follow the heibench table.** (#66)
@@ -170,7 +172,8 @@ semver while wikisync is 0.x. Full notes for each release are on the
   default; `--apply` to publish, experimental in this release), with baseline
   snapshots for offline diffs and revision checks before every push.
 
-[Unreleased]: https://github.com/heibench/wikisync/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/heibench/wikisync/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/heibench/wikisync/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/heibench/wikisync/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/heibench/wikisync/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/heibench/wikisync/compare/v0.4.0...v0.5.0
